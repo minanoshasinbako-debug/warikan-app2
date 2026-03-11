@@ -6,16 +6,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="割り勘Pro">
-    <title>割り勘精算 Pro - 詳細メッセージ版</title>
+    <title>割り勘精算 Pro - 送金案内対応</title>
     <style>
         :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; -webkit-text-size-adjust: 100%; }
         .status-box { background: #1C1C1E; color: white; padding: 18px; border-radius: 12px; margin-bottom: 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .total-val { font-size: 30px; font-weight: bold; color: #34C759; margin-top: 5px; }
-        .file-box { background: #FFF; border: 2px dashed var(--primary); padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 20px; color: var(--primary); font-weight: bold; font-size: 15px; cursor: pointer; }
         .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h2 { font-size: 14px; margin: 0 0 12px 0; color: #666; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 8px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; color: var(--text); }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; color: var(--text); }
         .target-select { font-size: 14px; font-weight: bold; color: var(--primary); background-color: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; height: 44px; }
         .item-row { display: grid; grid-template-columns: 1.8fr 0.6fr 1.2fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
         .btn-del { background: #FF3B30; color: white; border: none; border-radius: 6px; height: 42px; font-weight: bold; font-size: 18px; }
@@ -23,7 +22,6 @@
         .member-card.remote { border-left-color: #5856D6; background: #F9F9FB; }
         .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
         .pay-display { font-weight: bold; font-size: 24px; color: var(--primary); text-align: right; background: #F2F2F7; border-radius: 8px; padding: 10px; border: 1px solid #D1D1D6; }
-        .gift-input { border: 2px solid #34C759 !important; font-weight: bold; background: #F0FFF4; }
         .btn-add { background: #E5E5EA; color: #333; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 10px; }
         .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; box-shadow: 0 5px 20px rgba(0,122,255,0.4); z-index: 200; }
         .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
@@ -38,9 +36,9 @@
         <div class="total-val"><span id="targetTotalDisplay">0</span> 円</div>
     </div>
 
-    <div class="file-box" onclick="document.getElementById('memberFile').click()">
-        📁 メンバーリストを読込 (.txt)
-        <input type="file" id="memberFile" accept=".txt" onchange="loadMemberList(event)" style="display:none;">
+    <div class="card" style="border: 1px solid #FFCC00; background: #FFF9E6;">
+        <h2>🏦 送金先（メッセージに自動追記）</h2>
+        <textarea id="paymentInfo" placeholder="例：PayPay ID: sample123&#13;&#10;楽天ペイ: (URL)&#13;&#10;銀行振込: 〇〇銀行..." style="font-size: 13px; height: 80px;"></textarea>
     </div>
 
     <div class="card">
@@ -84,20 +82,6 @@
         renderAll();
     }
 
-    function loadMemberList(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const names = e.target.result.split(/\r?\n/).filter(n => n.trim() !== "");
-            if (names.length > 0) {
-                members = names.map(n => ({ name: n.trim(), type: 'split', gift: 0 }));
-                renderAll();
-            }
-        };
-        reader.readAsText(file);
-    }
-
     function renderReceipts() {
         const list = document.getElementById('receiptList');
         list.innerHTML = receipts.map((r, i) => `
@@ -131,7 +115,7 @@
                 <div class="input-group">
                     <div>
                         <span style="font-size:11px; color:#34C759; font-weight:bold;">🎁 カンパ入力</span>
-                        <input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();" class="gift-input">
+                        <input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();" style="border: 2px solid #34C759 !important; font-weight: bold; background: #F0FFF4;">
                     </div>
                     <div>
                         <span style="font-size:11px; color:#666; font-weight:bold;">💰 当日支払額</span>
@@ -185,15 +169,25 @@
         });
     }
 
-    // 個別メッセージ生成ロジック
     function createMessage(index) {
         const m = members[index];
+        const payInfo = document.getElementById('paymentInfo').value;
+        
         let detailText = "【精算内訳】\n";
         receipts.forEach(r => {
             detailText += `・${r.label}: ${(r.price * r.qty).toLocaleString()}円\n`;
         });
         
-        return `${m.name}兄弟姉妹、食事招待のご協力ありがとうございます！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n\nよろしくお願いします！`;
+        let msg = `${m.name}兄弟
+        姉妹
+        、食事招待のご協力に感謝いたします！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n`;
+        
+        if (payInfo.trim() !== "") {
+            msg += `\n--- 💳 送金はこちら ---\n${payInfo}\n`;
+        }
+        
+        msg += "\nよろしくお願いします！";
+        return msg;
     }
 
     function sendLine(index) {
@@ -203,7 +197,7 @@
 
     function copyIndividual(index) {
         const text = createMessage(index);
-        navigator.clipboard.writeText(text).then(() => alert(`${members[index].name}さん用の詳細付き文面をコピーしました！`));
+        navigator.clipboard.writeText(text).then(() => alert(`${members[index].name}さん用の文面をコピーしました！`));
     }
 
     function copyToClipboard() {
@@ -214,22 +208,17 @@
             grandTotal += itemTotal;
             text += `${r.label}: ${r.qty}×${r.price.toLocaleString()}円 ＝ ${itemTotal.toLocaleString()}円\n`; 
         });
-        text += `[ 経費総計: ${grandTotal.toLocaleString()}円 ]\n`;
-
-        const givers = members.filter(m => m.gift > 0);
-        if (givers.length > 0) {
-            const giftTotal = givers.reduce((sum, m) => sum + m.gift, 0);
-            text += "\n--- 🎁 既払・カンパ明細 ---\n";
-            givers.forEach(m => { text += `${m.name}: ${m.gift.toLocaleString()}円\n`; });
-            text += `[ カンパ総計: ${giftTotal.toLocaleString()}円 ]\n`;
+        
+        const payInfo = document.getElementById('paymentInfo').value;
+        if (payInfo.trim() !== "") {
+            text += `\n--- 💳 送金先 ---\n${payInfo}\n`;
         }
 
-        const collectTarget = Math.max(0, grandTotal - givers.reduce((sum, m) => sum + m.gift, 0));
-        text += `\n--- 💰 お支払一覧（目標: ${collectTarget.toLocaleString()}円） ---\n`;
+        text += `\n--- 💰 お支払一覧 ---\n`;
         members.forEach(m => { 
             if(m.tempPay > 0 || m.type === 'split') text += `${m.name}: ${m.tempPay.toLocaleString()}円\n`; 
         });
-        text += "\nご確認よろしくお願いします！";
+        
         navigator.clipboard.writeText(text).then(() => alert("全員分の精算結果をコピーしました！"));
     }
 </script>
