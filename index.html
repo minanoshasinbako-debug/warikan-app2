@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="割り勘Pro">
-    <title>割り勘精算 Pro - 送金案内対応</title>
+    <title>割り勘精算 Pro - 最終修正版</title>
     <style>
         :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; -webkit-text-size-adjust: 100%; }
@@ -27,6 +27,7 @@
         .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
         .btn-line { background: var(--line); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
         .btn-sub { background: #8E8E93; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .file-box { background: #FFF; border: 2px dashed var(--primary); padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 20px; color: var(--primary); font-weight: bold; font-size: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -37,8 +38,13 @@
     </div>
 
     <div class="card" style="border: 1px solid #FFCC00; background: #FFF9E6;">
-        <h2>🏦 送金先（メッセージに自動追記）</h2>
-        <textarea id="paymentInfo" placeholder="例：PayPay ID: sample123&#13;&#10;楽天ペイ: (URL)&#13;&#10;銀行振込: 〇〇銀行..." style="font-size: 13px; height: 80px;"></textarea>
+        <h2>🏦 送金先設定（メッセージに自動追記）</h2>
+        <textarea id="paymentInfo" placeholder="例：PayPay ID: sample123&#13;&#10;楽天ペイ: (URL)など" style="font-size: 13px; height: 60px;"></textarea>
+    </div>
+
+    <div class="file-box" onclick="document.getElementById('memberFile').click()">
+        📁 メンバーリストを読込 (.txt)
+        <input type="file" id="memberFile" accept=".txt" onchange="loadMemberList(event)" style="display:none;">
     </div>
 
     <div class="card">
@@ -60,8 +66,8 @@
     ];
 
     let members = [
-        { name: '幹事', type: 'split', gift: 0 },
-        { name: '参加者1', type: 'split', gift: 0 }
+        { name: '幹事', type: 'split', gift: 0, tempPay: 0 },
+        { name: '参加者1', type: 'split', gift: 0, tempPay: 0 }
     ];
 
     window.onload = () => { renderAll(); };
@@ -78,8 +84,23 @@
     }
 
     function addMember() {
-        members.push({ name: '新メンバー', type: 'split', gift: 0 });
+        members.push({ name: '新メンバー', type: 'split', gift: 0, tempPay: 0 });
         renderAll();
+    }
+
+    function loadMemberList(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const names = e.target.result.split(/\r?\n/).filter(n => n.trim() !== "");
+            if (names.length > 0) {
+                // ここで正しく初期データをセット
+                members = names.map(n => ({ name: n.trim(), type: 'split', gift: 0, tempPay: 0 }));
+                renderAll(); // これによりrenderMembersとupdateCalculationsが走る
+            }
+        };
+        reader.readAsText(file);
     }
 
     function renderReceipts() {
@@ -93,7 +114,7 @@
                     <button class="btn-del" onclick="receipts.splice(${i},1); renderAll();">✕</button>
                 </div>
                 <select class="target-select" onchange="receipts[${i}].target=this.value; updateCalculations();">
-                    <option value="all" ${r.target==='all'?'selected':''}>👥 全員で割り勘（不参加含む）</option>
+                    <option value="all" ${r.target==='all'?'selected':''}>👥 全員で割り勘</option>
                     <option value="split_only" ${r.target==='split_only'?'selected':''}>🍴 参加者のみで割り勘</option>
                 </select>
             </div>
@@ -172,20 +193,12 @@
     function createMessage(index) {
         const m = members[index];
         const payInfo = document.getElementById('paymentInfo').value;
-        
         let detailText = "【精算内訳】\n";
         receipts.forEach(r => {
             detailText += `・${r.label}: ${(r.price * r.qty).toLocaleString()}円\n`;
         });
-        
-        let msg = `${m.name}兄弟
-        姉妹
-        、食事招待のご協力に感謝いたします！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n`;
-        
-        if (payInfo.trim() !== "") {
-            msg += `\n--- 💳 送金はこちら ---\n${payInfo}\n`;
-        }
-        
+        let msg = `${m.name}さん、お疲れ様です！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n`;
+        if (payInfo.trim() !== "") msg += `\n--- 💳 送金先 ---\n${payInfo}\n`;
         msg += "\nよろしくお願いします！";
         return msg;
     }
@@ -197,7 +210,7 @@
 
     function copyIndividual(index) {
         const text = createMessage(index);
-        navigator.clipboard.writeText(text).then(() => alert(`${members[index].name}さん用の文面をコピーしました！`));
+        navigator.clipboard.writeText(text).then(() => alert(`${members[index].name}さん用の詳細付き文面をコピーしました！`));
     }
 
     function copyToClipboard() {
@@ -208,17 +221,12 @@
             grandTotal += itemTotal;
             text += `${r.label}: ${r.qty}×${r.price.toLocaleString()}円 ＝ ${itemTotal.toLocaleString()}円\n`; 
         });
-        
         const payInfo = document.getElementById('paymentInfo').value;
-        if (payInfo.trim() !== "") {
-            text += `\n--- 💳 送金先 ---\n${payInfo}\n`;
-        }
-
+        if (payInfo.trim() !== "") text += `\n--- 💳 送金先 ---\n${payInfo}\n`;
         text += `\n--- 💰 お支払一覧 ---\n`;
         members.forEach(m => { 
             if(m.tempPay > 0 || m.type === 'split') text += `${m.name}: ${m.tempPay.toLocaleString()}円\n`; 
         });
-        
         navigator.clipboard.writeText(text).then(() => alert("全員分の精算結果をコピーしました！"));
     }
 </script>
