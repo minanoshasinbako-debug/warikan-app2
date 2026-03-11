@@ -36,7 +36,7 @@
     </div>
 
     <div class="card" style="border: 1px solid #FFCC00; background: #FFF9E6;">
-        <input type="text" id="paymentInfo" placeholder="送金先情報（PayPay  楽天ペイなど）">
+        <input type="text" id="paymentInfo" placeholder="送金先情報（PayPay URLなど）">
     </div>
 
     <div class="file-box" onclick="document.getElementById('memberFile').click()">
@@ -45,17 +45,16 @@
     </div>
 
     <div class="card">
-        <h2>🧾 経費の内訳（負担範囲を選択）</h2>
+        <h2>🧾 経費の内訳</h2>
         <div id="receiptList"></div>
         <button class="btn-add" onclick="addReceipt()">＋ 項目を追加</button>
     </div>
 
-    <h2>👥 メンバー（役割と個別の実費）</h2>
+    <h2>👥 メンバー（役割・個別実費・カンパ）</h2>
     <div id="memberList"></div>
-    
     <button class="btn-add" style="background:white; border:2px dashed #CCC;" onclick="addMember()">＋ メンバーを手動追加</button>
 
-    <button class="btn-copy" onclick="copyToClipboard()">精算結果（明細付）をコピー</button>
+    <button class="btn-copy" onclick="copyToClipboard()">精算結果（明細・内訳付）をコピー</button>
 
 <script>
     let receipts = [
@@ -132,7 +131,7 @@
                 <div class="input-group-3">
                     <div><span style="font-size:10px; font-weight:bold; color:#007AFF;">🍱 個別実費</span>
                     <input type="number" value="${m.personal}" oninput="members[${i}].personal=parseFloat(this.value)||0; updateCalculations();"></div>
-                    <div><span style="font-size:10px; font-weight:bold; color:#34C759;">🎁 カンパ</span>
+                    <div><span style="font-size:10px; font-weight:bold; color:#E63946;">🎁 カンパ</span>
                     <input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();"></div>
                     <div><span style="font-size:10px; font-weight:bold;">💰 支払額</span>
                     <div class="pay-display" id="pay-val-${i}">0</div></div>
@@ -142,67 +141,98 @@
     }
 
     function updateCalculations() {
-        members.forEach(m => { m.tempPay = 0; m.details = []; });
+        members.forEach(m => { m.tempPay = 0; m.details = []; m.surplusGift = 0; });
         
         receipts.forEach(r => {
             const cost = r.price * r.qty;
-            let targetMembers = [];
-            if (r.target === 'all') {
-                targetMembers = members.filter(m => m.type === 'both' || m.type === 'pay-only');
-            } else {
-                targetMembers = members.filter(m => m.type === 'both' || m.type === 'join-only');
-            }
+            let targets = (r.target === 'all') 
+                ? members.filter(m => m.type === 'both' || m.type === 'pay-only')
+                : members.filter(m => m.type === 'both' || m.type === 'join-only');
 
-            if (targetMembers.length > 0) {
-                const share = Math.floor(cost / targetMembers.length);
-                targetMembers.forEach(m => {
+            if (targets.length > 0) {
+                const share = Math.floor(cost / targets.length);
+                targets.forEach(m => {
                     m.tempPay += share;
                     m.details.push(`${r.label}: ${share.toLocaleString()}円`);
                 });
             }
         });
 
-        let totalExpenses = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0);
-        let totalPersonal = members.reduce((sum, m) => sum + m.personal, 0);
+        let totalSurplus = 0;
+        members.forEach(m => {
+            let myCost = m.tempPay + m.personal;
+            if (m.gift > myCost) totalSurplus += (m.gift - myCost);
+        });
+
+        let payers = members.filter(m => (m.type !== 'none' && (m.tempPay + m.personal) > 0));
+        let discountPerPerson = payers.length > 0 ? Math.floor(totalSurplus / payers.length) : 0;
 
         members.forEach((m, i) => {
-            if (m.personal > 0) m.details.push(`個別実費: ${m.personal.toLocaleString()}円`);
-            if (m.gift > 0) m.details.push(`カンパ差引: -${m.gift.toLocaleString()}円`);
-            m.finalPay = Math.max(0, m.tempPay + m.personal - m.gift);
+            let myCost = m.tempPay + m.personal;
+            if (m.gift > 0) m.details.push(`カンパ: -${m.gift.toLocaleString()}円`);
+            let afterGift = Math.max(0, myCost - m.gift);
+            
+            if (discountPerPerson > 0 && afterGift > 0) {
+                m.details.push(`カンパ還元: -${discountPerPerson.toLocaleString()}円`);
+                m.finalPay = Math.max(0, afterGift - discountPerPerson);
+            } else {
+                m.finalPay = afterGift;
+            }
             const el = document.getElementById(`pay-val-${i}`);
             if (el) el.textContent = m.finalPay.toLocaleString();
         });
 
+        let totalExpenses = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0);
+        let totalPersonal = members.reduce((sum, m) => sum + m.personal, 0);
         document.getElementById('targetTotalDisplay').textContent = (totalExpenses + totalPersonal).toLocaleString();
+    }
+
+    function getExpenseSummary() {
+        let summary = "【経費明細】\n";
+        receipts.forEach(r => {
+            summary += `・${r.label}: ${r.price.toLocaleString()}円 × ${r.qty} = ${(r.price * r.qty).toLocaleString()}円\n`;
+        });
+        const total = document.getElementById('targetTotalDisplay').textContent;
+        summary += `  合計経費: ${total}円\n`;
+        return summary;
     }
 
     function sendLine(index) {
         const m = members[index];
         const payInfo = document.getElementById('paymentInfo').value;
-        let msg = `${m.name}兄弟姉妹。食事招待のご協力ありがとうございます。今回の食事招待でかかった費用のお知らせです。\n\n【合計】${m.finalPay.toLocaleString()}円\n`;
-        if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
-        if (payInfo) msg += `\n送金先:\n${payInfo}`;
+        let msg = `${m.name}様\n精算のお知らせです。\n\n`;
         
-        const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
-        window.location.href = lineUrl;
+        msg += getExpenseSummary() + "\n";
+        
+        if (m.gift > 0) {
+            msg += `多大なるカンパをいただき、心より感謝申し上げます！\n`;
+        } else if (m.details.some(d => d.includes("カンパ還元"))) {
+            msg += `※皆様からのカンパにより負担額が軽減されました。感謝！\n`;
+        }
+        
+        msg += `\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
+        if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
+        if (m.finalPay > 0 && payInfo) msg += `\n送金先:\n${payInfo}`;
+        
+        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
     }
 
     function copyToClipboard() {
-        let text = "【精算結果（明細）】\n\n";
+        let text = "【精算結果（明細付）】\n\n";
+        text += getExpenseSummary() + "\n";
+        text += "------------------------\n\n";
+        
         members.forEach(m => {
             if(m.type !== 'none') {
                 text += `● ${m.name}: ${m.finalPay.toLocaleString()}円\n`;
+                if (m.gift > 0) text += `   ※カンパありがとうございます！\n`;
                 if (m.details.length > 0) text += `   (内訳: ${m.details.join(' / ')})\n`;
                 text += `\n`;
             }
         });
         const payInfo = document.getElementById('paymentInfo').value;
-        if(payInfo) text += `
-        送金先: お支払いは
-        現金か
-        こちらからご送金ください
-        →{payInfo}\n`;
-        navigator.clipboard.writeText(text).then(() => alert("明細付きの結果をコピーしました！"));
+        if(payInfo) text += `送金先: ${payInfo}\n`;
+        navigator.clipboard.writeText(text).then(() => alert("経費明細入りの結果をコピーしました！"));
     }
 </script>
 </body>
