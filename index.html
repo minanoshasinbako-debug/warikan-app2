@@ -36,7 +36,7 @@
     </div>
 
     <div class="card" style="border: 1px solid #FFCC00; background: #FFF9E6;">
-        <input type="text" id="paymentInfo" placeholder="送金先情報（PayPay URLなど）">
+        <input type="text" id="paymentInfo" placeholder="送金先情報（PayPay URLや銀行口座など）">
     </div>
 
     <div class="file-box" onclick="document.getElementById('memberFile').click()">
@@ -200,19 +200,25 @@
     function sendLine(index) {
         const m = members[index];
         const payInfo = document.getElementById('paymentInfo').value;
-        let msg = `${m.name}様\n精算のお知らせです。\n\n`;
+        let msg = `${m.name}兄弟姉妹\n精算のお知らせです。食事招待のご協力ありがとうございます。\n\n`;
         
         msg += getExpenseSummary() + "\n";
         
         if (m.gift > 0) {
             msg += `多大なるカンパをいただき、心より感謝申し上げます！\n`;
         } else if (m.details.some(d => d.includes("カンパ還元"))) {
-            msg += `※皆様からのカンパにより負担額が軽減されました。感謝！\n`;
+            msg += `※皆様からのカンパにより負担額が軽減されました。感謝して頂戴しましょう！\n`;
         }
         
         msg += `\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
         if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
-        if (m.finalPay > 0 && payInfo) msg += `\n送金先:\n${payInfo}`;
+        
+        if (m.finalPay > 0) {
+            msg += `\n【お支払い方法】\nPayPay等の電子決済、または現金でも可能です。\n`;
+            if (payInfo) msg += `\n送金先詳細:\n${payInfo}`;
+        } else {
+            msg += `\n今回はお支払いは不要です。`;
+        }
         
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
     }
@@ -224,15 +230,18 @@
         
         members.forEach(m => {
             if(m.type !== 'none') {
-                text += `● ${m.name}: ${m.finalPay.toLocaleString()}円\n`;
+                text += `● ${m.name}兄弟姉妹: ${m.finalPay.toLocaleString()}円\n`;
                 if (m.gift > 0) text += `   ※カンパありがとうございます！\n`;
                 if (m.details.length > 0) text += `   (内訳: ${m.details.join(' / ')})\n`;
                 text += `\n`;
             }
         });
+        
+        text += "【お支払い方法】\nPayPay等の電子決済、または現金でも可能です。\n";
         const payInfo = document.getElementById('paymentInfo').value;
-        if(payInfo) text += `送金先: ${payInfo}\n`;
-        navigator.clipboard.writeText(text).then(() => alert("経費明細入りの結果をコピーしました！"));
+        if(payInfo) text += `\n送金先詳細:\n${payInfo}\n`;
+        
+        navigator.clipboard.writeText(text).then(() => alert("兄弟姉妹向けの明細結果をコピーしました！"));
     }
 </script>
 </body>
