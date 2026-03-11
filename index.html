@@ -12,20 +12,17 @@
         .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h2 { font-size: 14px; margin: 0 0 12px 0; color: #666; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 8px; }
         input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        .file-box { background: #FFF; border: 2px dashed var(--primary); padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 20px; color: var(--primary); font-weight: bold; cursor: pointer; }
-        .target-select { font-size: 15px; font-weight: bold; color: var(--primary); background: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; }
+        .target-select { font-size: 13px; font-weight: bold; color: var(--primary); background: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; padding: 8px; }
         .item-row { display: grid; grid-template-columns: 1.8fr 0.6fr 1.2fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
         .btn-del { background: #CCC; border: none; border-radius: 6px; height: 42px; font-weight: bold; cursor: pointer; }
         .member-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 8px solid #CCC; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .member-card.both { border-left-color: #34C759; } 
-        .member-card.pay-only { border-left-color: #AF52DE; } 
-        .member-card.join-only { border-left-color: #FF9500; } 
-        .member-card.none { border-left-color: #8E8E93; opacity: 0.6; }
-        .input-group-3 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; margin-top: 10px; }
+        .gender-select { display: flex; gap: 4px; margin-top: 8px; }
+        .gender-btn { flex: 1; padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #D1D1D6; background: #F2F2F7; cursor: pointer; }
+        .gender-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .pay-display { font-weight: bold; font-size: 20px; color: var(--primary); text-align: right; background: #F2F2F7; border-radius: 8px; padding: 8px; border: 1px solid #D1D1D6; }
         .btn-add { background: #E5E5EA; color: #333; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
-        .btn-line { background: var(--line); color: white; border: none; border-radius: 8px; padding: 0 12px; height: 42px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; z-index: 200; box-shadow: 0 5px 20px rgba(0,122,255,0.4); }
+        .btn-line { background: var(--line); color: white; border: none; border-radius: 8px; padding: 0 15px; height: 42px; font-weight: bold; cursor: pointer; }
+        .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; z-index: 200; }
     </style>
 </head>
 <body>
@@ -36,32 +33,31 @@
     </div>
 
     <div class="card" style="border: 1px solid #FFCC00; background: #FFF9E6;">
-        <input type="text" id="paymentInfo" placeholder="送金先情報（PayPay URLや銀行口座など）">
-    </div>
-
-    <div class="file-box" onclick="document.getElementById('memberFile').click()">
-        📁 メンバーリストを読込 (.txt)
-        <input type="file" id="memberFile" accept=".txt" onchange="loadMemberList(event)" style="display:none;">
+        <input type="text" id="paymentInfo" placeholder="送金先詳細（PayPay・現金可など）">
     </div>
 
     <div class="card">
-        <h2>🧾 経費の内訳</h2>
+        <h2>🧾 経費の内訳（負担範囲を選択）</h2>
         <div id="receiptList"></div>
         <button class="btn-add" onclick="addReceipt()">＋ 項目を追加</button>
     </div>
 
-    <h2>👥 メンバー（役割・個別実費・カンパ）</h2>
+    <h2>👥 メンバー（性別を推測して呼び分け）</h2>
     <div id="memberList"></div>
     <button class="btn-add" style="background:white; border:2px dashed #CCC;" onclick="addMember()">＋ メンバーを手動追加</button>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <input type="file" id="memberFile" accept=".txt" onchange="loadMemberList(event)" style="display:none;">
+        <button class="btn-add" onclick="document.getElementById('memberFile').click()">📁 メンバーリスト読込 (.txt)</button>
+    </div>
 
-    <button class="btn-copy" onclick="copyToClipboard()">精算結果（明細・内訳付）をコピー</button>
+    <button class="btn-copy" onclick="copyToClipboard()">精算結果をコピー（呼び分け反映）</button>
 
 <script>
     let receipts = [
         { label: '弁当1', price: 1200, qty: 3, target: 'join_only' },
         { label: '弁当2', price: 1200, qty: 10, target: 'join_only' }
     ];
-    let members = [{ name: '幹事', type: 'both', personal: 0, gift: 0 }];
+    let members = [{ name: '幹事', type: 'both', personal: 0, gift: 0, gender: 'none' }];
 
     window.onload = () => renderAll();
 
@@ -71,28 +67,14 @@
         updateCalculations();
     }
 
-    function addReceipt() {
-        receipts.push({ label: '新規項目', price: 0, qty: 1, target: 'all' });
-        renderAll();
-    }
-
-    function addMember() {
-        members.push({ name: '新規', type: 'both', personal: 0, gift: 0 });
-        renderAll();
-    }
-
-    function loadMemberList(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const names = e.target.result.split(/\r?\n/).filter(n => n.trim() !== "");
-            if (names.length > 0) {
-                members = names.map(n => ({ name: n.trim(), type: 'both', personal: 0, gift: 0 }));
-                renderAll();
-            }
-        };
-        reader.readAsText(file);
+    function guessGender(name) {
+        if (!name) return 'none';
+        const femaleEnds = ['子', '美', '香', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華', 'み', 'な', 'こ', 'よ'];
+        const maleEnds = ['郎', '太', '介', '輔', '助', '夫', '雄', '生', '一', '也', '志', '昭', '紀', '樹', '人', '朗'];
+        const lastChar = name.slice(-1);
+        if (femaleEnds.includes(lastChar)) return 'female';
+        if (maleEnds.includes(lastChar)) return 'male';
+        return 'none';
     }
 
     function renderReceipts() {
@@ -106,8 +88,8 @@
                     <button class="btn-del" onclick="receipts.splice(${i},1); renderAll();">✕</button>
                 </div>
                 <select class="target-select" onchange="receipts[${i}].target=this.value; updateCalculations();">
-                    <option value="all" ${r.target==='all'?'selected':''}>👥 負担する人全員(✅💜)で等分</option>
-                    <option value="join_only" ${r.target==='join_only'?'selected':''}>🍴 実際に参加する人(✅🍊)のみで等分</option>
+                    <option value="all" ${r.target==='all'?'selected':''}>👥 全員(✅💜)で等分</option>
+                    <option value="join_only" ${r.target==='join_only'?'selected':''}>🍴 参加者(✅🍊)のみで等分</option>
                 </select>
             </div>
         `).join('');
@@ -117,132 +99,122 @@
         const list = document.getElementById('memberList');
         list.innerHTML = members.map((m, i) => `
             <div class="member-card ${m.type}">
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items:center;">
                     <input type="text" value="${m.name}" oninput="members[${i}].name=this.value" style="font-weight:bold; flex:1;">
                     <button class="btn-line" onclick="sendLine(${i})">LINE</button>
                     <button style="background:none; border:none; font-size:18px;" onclick="members.splice(${i},1); renderAll();">✕</button>
                 </div>
-                <select onchange="members[${i}].type=this.value; renderAll();" style="margin-top:8px;">
+                <div class="gender-select">
+                    <button class="gender-btn ${m.gender==='male'?'active':''}" onclick="members[${i}].gender='male'; renderMembers();">兄</button>
+                    <button class="gender-btn ${m.gender==='female'?'active':''}" onclick="members[${i}].gender='female'; renderMembers();">姉</button>
+                    <button class="gender-btn ${m.gender==='none'?'active':''}" onclick="members[${i}].gender='none'; renderMembers();">？</button>
+                </div>
+                <select onchange="members[${i}].type=this.value; updateCalculations();" style="margin-top:8px;">
                     <option value="both" ${m.type==='both'?'selected':''}>✅ 参加＋分担金払う</option>
                     <option value="pay-only" ${m.type==='pay-only'?'selected':''}>💜 不参加＋分担金払う</option>
-                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加＋分担金なし(実費等分に参加)</option>
-                    <option value="none" ${m.type==='none'?'selected':''}>⚪️ 全く何もしない</option>
+                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加＋分担金なし</option>
                 </select>
-                <div class="input-group-3">
-                    <div><span style="font-size:10px; font-weight:bold; color:#007AFF;">🍱 個別実費</span>
-                    <input type="number" value="${m.personal}" oninput="members[${i}].personal=parseFloat(this.value)||0; updateCalculations();"></div>
-                    <div><span style="font-size:10px; font-weight:bold; color:#E63946;">🎁 カンパ</span>
-                    <input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();"></div>
-                    <div><span style="font-size:10px; font-weight:bold;">💰 支払額</span>
-                    <div class="pay-display" id="pay-val-${i}">0</div></div>
+                <div class="input-group-3" style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:8px; margin-top:10px;">
+                    <div><span style="font-size:10px;">🍱 個別</span><input type="number" value="${m.personal}" oninput="members[${i}].personal=parseFloat(this.value)||0; updateCalculations();"></div>
+                    <div><span style="font-size:10px;">🎁 カンパ</span><input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();"></div>
+                    <div><span style="font-size:10px;">💰 支払</span><div class="pay-display" id="pay-val-${i}">0</div></div>
                 </div>
             </div>
         `).join('');
     }
 
     function updateCalculations() {
-        members.forEach(m => { m.tempPay = 0; m.details = []; m.surplusGift = 0; });
-        
+        members.forEach(m => { m.tempPay = 0; m.details = []; });
         receipts.forEach(r => {
             const cost = r.price * r.qty;
             let targets = (r.target === 'all') 
                 ? members.filter(m => m.type === 'both' || m.type === 'pay-only')
                 : members.filter(m => m.type === 'both' || m.type === 'join-only');
-
             if (targets.length > 0) {
                 const share = Math.floor(cost / targets.length);
-                targets.forEach(m => {
-                    m.tempPay += share;
-                    m.details.push(`${r.label}: ${share.toLocaleString()}円`);
-                });
+                targets.forEach(m => { m.tempPay += share; m.details.push(`${r.label}: ${share.toLocaleString()}円`); });
             }
         });
-
         let totalSurplus = 0;
-        members.forEach(m => {
-            let myCost = m.tempPay + m.personal;
-            if (m.gift > myCost) totalSurplus += (m.gift - myCost);
-        });
-
-        let payers = members.filter(m => (m.type !== 'none' && (m.tempPay + m.personal) > 0));
-        let discountPerPerson = payers.length > 0 ? Math.floor(totalSurplus / payers.length) : 0;
+        members.forEach(m => { if (m.gift > (m.tempPay + m.personal)) totalSurplus += (m.gift - (m.tempPay + m.personal)); });
+        let payers = members.filter(m => (m.tempPay + m.personal) > 0);
+        let discount = payers.length > 0 ? Math.floor(totalSurplus / payers.length) : 0;
 
         members.forEach((m, i) => {
-            let myCost = m.tempPay + m.personal;
+            let afterGift = Math.max(0, (m.tempPay + m.personal) - m.gift);
             if (m.gift > 0) m.details.push(`カンパ: -${m.gift.toLocaleString()}円`);
-            let afterGift = Math.max(0, myCost - m.gift);
-            
-            if (discountPerPerson > 0 && afterGift > 0) {
-                m.details.push(`カンパ還元: -${discountPerPerson.toLocaleString()}円`);
-                m.finalPay = Math.max(0, afterGift - discountPerPerson);
-            } else {
-                m.finalPay = afterGift;
-            }
+            if (discount > 0 && afterGift > 0) {
+                m.details.push(`カンパ還元: -${discount.toLocaleString()}円`);
+                m.finalPay = Math.max(0, afterGift - discount);
+            } else { m.finalPay = afterGift; }
             const el = document.getElementById(`pay-val-${i}`);
             if (el) el.textContent = m.finalPay.toLocaleString();
         });
+        document.getElementById('targetTotalDisplay').textContent = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0).toLocaleString();
+    }
 
-        let totalExpenses = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0);
-        let totalPersonal = members.reduce((sum, m) => sum + m.personal, 0);
-        document.getElementById('targetTotalDisplay').textContent = (totalExpenses + totalPersonal).toLocaleString();
+    function getSuffix(gender) {
+        if (gender === 'male') return '兄弟';
+        if (gender === 'female') return '姉妹';
+        return '兄弟姉妹';
     }
 
     function getExpenseSummary() {
         let summary = "【経費明細】\n";
-        receipts.forEach(r => {
-            summary += `・${r.label}: ${r.price.toLocaleString()}円 × ${r.qty} = ${(r.price * r.qty).toLocaleString()}円\n`;
-        });
-        const total = document.getElementById('targetTotalDisplay').textContent;
-        summary += `  合計経費: ${total}円\n`;
+        receipts.forEach(r => { summary += `・${r.label}: ${r.price.toLocaleString()}円 × ${r.qty} = ${(r.price * r.qty).toLocaleString()}円\n`; });
+        summary += `  合計経費: ${document.getElementById('targetTotalDisplay').textContent}円\n`;
         return summary;
     }
 
     function sendLine(index) {
         const m = members[index];
         const payInfo = document.getElementById('paymentInfo').value;
-        let msg = `${m.name}兄弟姉妹\n精算のお知らせです。食事招待のご協力ありがとうございます。\n\n`;
-        
+        const suffix = getSuffix(m.gender);
+        let msg = `${m.name}${suffix}\n精算のお知らせです。食事招待のご協力ありがとうございます。\n\n`;
         msg += getExpenseSummary() + "\n";
-        
-        if (m.gift > 0) {
-            msg += `多大なるカンパをいただき、心より感謝申し上げます！\n`;
-        } else if (m.details.some(d => d.includes("カンパ還元"))) {
-            msg += `※皆様からのカンパにより負担額が軽減されました。感謝して頂戴しましょう！\n`;
-        }
-        
+        if (m.gift > 0) msg += `多大なるカンパをいただき、心より感謝申し上げます！\n`;
+        else if (m.details.some(d => d.includes("還元"))) msg += `※皆様からのカンパにより負担額が軽減されました。感謝して頂戴しましょう！\n`;
         msg += `\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
         if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
-        
-        if (m.finalPay > 0) {
-            msg += `\n【お支払い方法】\nPayPay等の電子決済、または現金でも可能です。\n`;
-            if (payInfo) msg += `\n送金先詳細:\n${payInfo}`;
-        } else {
-            msg += `\n今回はお支払いは不要です。`;
-        }
-        
+        msg += `\n【お支払い方法】\nPayPay等の電子決済、または現金でも可能です。\n`;
+        if (payInfo) msg += `\n送金先詳細:\n${payInfo}`;
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
     }
 
     function copyToClipboard() {
-        let text = "【精算結果（明細付）】\n\n";
-        text += getExpenseSummary() + "\n";
-        text += "------------------------\n\n";
-        
+        let text = "【精算結果（明細付）】\n\n" + getExpenseSummary() + "\n------------------------\n\n";
         members.forEach(m => {
             if(m.type !== 'none') {
-                text += `● ${m.name}兄弟姉妹: ${m.finalPay.toLocaleString()}円\n`;
+                text += `● ${m.name}${getSuffix(m.gender)}: ${m.finalPay.toLocaleString()}円\n`;
                 if (m.gift > 0) text += `   ※カンパありがとうございます！\n`;
                 if (m.details.length > 0) text += `   (内訳: ${m.details.join(' / ')})\n`;
                 text += `\n`;
             }
         });
-        
         text += "【お支払い方法】\nPayPay等の電子決済、または現金でも可能です。\n";
         const payInfo = document.getElementById('paymentInfo').value;
         if(payInfo) text += `\n送金先詳細:\n${payInfo}\n`;
-        
-        navigator.clipboard.writeText(text).then(() => alert("兄弟姉妹向けの明細結果をコピーしました！"));
+        navigator.clipboard.writeText(text).then(() => alert("結果をコピーしました！"));
     }
+
+    function loadMemberList(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const names = e.target.result.split(/\r?\n/).filter(n => n.trim() !== "");
+            if (names.length > 0) {
+                members = names.map(n => {
+                    const name = n.trim();
+                    return { name: name, type: 'both', personal: 0, gift: 0, gender: guessGender(name) };
+                });
+                renderAll();
+            }
+        };
+        reader.readAsText(file);
+    }
+    function addReceipt() { receipts.push({ label: '新規項目', price: 0, qty: 1, target: 'join_only' }); renderAll(); }
+    function addMember() { members.push({ name: '新規', type: 'both', personal: 0, gift: 0, gender: 'none' }); renderAll(); }
 </script>
 </body>
 </html>
