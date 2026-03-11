@@ -197,7 +197,11 @@
             }
         });
         const payInfo = document.getElementById('paymentInfo').value;
-        if(payInfo) text += `送金先: ${payInfo}\n`;
+        if(payInfo) text += `お支払いは
+        現金か
+        こちらからご送金ください
+        →
+        送金先: ${payInfo}\n`;
         navigator.clipboard.writeText(text).then(() => alert("明細付きの結果をコピーしました！"));
     }
 </script>
