@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>割り勘精算 Pro - 均等配分版</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="割り勘Pro">
+    <title>割り勘精算 Pro - 詳細メッセージ版</title>
     <style>
-        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
+        :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; -webkit-text-size-adjust: 100%; }
         .status-box { background: #1C1C1E; color: white; padding: 18px; border-radius: 12px; margin-bottom: 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .total-val { font-size: 30px; font-weight: bold; color: #34C759; margin-top: 5px; }
@@ -13,7 +16,7 @@
         .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h2 { font-size: 14px; margin: 0 0 12px 0; color: #666; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 8px; }
         input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; color: var(--text); }
-        .target-select { font-size: 15px; font-weight: bold; color: var(--primary); background-color: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; height: 48px; }
+        .target-select { font-size: 14px; font-weight: bold; color: var(--primary); background-color: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; height: 44px; }
         .item-row { display: grid; grid-template-columns: 1.8fr 0.6fr 1.2fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
         .btn-del { background: #FF3B30; color: white; border: none; border-radius: 6px; height: 42px; font-weight: bold; font-size: 18px; }
         .member-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 8px solid #34C759; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -23,6 +26,9 @@
         .gift-input { border: 2px solid #34C759 !important; font-weight: bold; background: #F0FFF4; }
         .btn-add { background: #E5E5EA; color: #333; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 10px; }
         .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; box-shadow: 0 5px 20px rgba(0,122,255,0.4); z-index: 200; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .btn-line { background: var(--line); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .btn-sub { background: #8E8E93; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -47,13 +53,12 @@
     <div id="memberList"></div>
     <button class="btn-add" style="background:white; border:2px dashed #CCC;" onclick="addMember()">＋ メンバーを手動追加</button>
 
-    <button class="btn-copy" onclick="copyToClipboard()">精算結果をコピーして送信</button>
+    <button class="btn-copy" onclick="copyToClipboard()">精算結果をまとめてコピー</button>
 
 <script>
     let receipts = [
         { label: '会場費', price: 1200, qty: 1, target: 'all' },
-        { label: 'お弁当', price: 1000, qty: 10, target: 'split_only' },
-        { label: '来客用弁当', price: 1000, qty: 3, target: 'split_only' }
+        { label: 'お弁当', price: 1000, qty: 10, target: 'split_only' }
     ];
 
     let members = [
@@ -115,9 +120,9 @@
         const list = document.getElementById('memberList');
         list.innerHTML = members.map((m, i) => `
             <div class="member-card ${m.type}" id="m-card-${i}">
-                <div class="member-header">
+                <div style="display: flex; gap: 8px;">
                     <input type="text" value="${m.name}" oninput="members[${i}].name=this.value" style="flex:2; font-weight:bold;">
-                    <select onchange="members[${i}].type=this.value; updateCalculations(); document.getElementById('m-card-${i}').className='member-card '+this.value;" style="width:100px;">
+                    <select onchange="members[${i}].type=this.value; updateCalculations(); document.getElementById('m-card-${i}').className='member-card '+this.value;" style="width:80px;">
                         <option value="split" ${m.type==='split'?'selected':''}>参加</option>
                         <option value="remote" ${m.type==='remote'?'selected':''}>不参加</option>
                     </select>
@@ -132,6 +137,10 @@
                         <span style="font-size:11px; color:#666; font-weight:bold;">💰 当日支払額</span>
                         <div class="pay-display" id="pay-val-${i}">0</div>
                     </div>
+                </div>
+                <div class="action-grid">
+                    <button onclick="sendLine(${i})" class="btn-line">LINEで送る</button>
+                    <button onclick="copyIndividual(${i})" class="btn-sub">文面をコピー</button>
                 </div>
             </div>
         `).join('');
@@ -152,32 +161,21 @@
         const allMemberCount = members.length || 1;
         const participantCount = participants.length || 1;
 
-        // 1. 各自の「純粋な分担額」を小数点込みで計算
         members.forEach(m => {
             let myShare = (poolAll / allMemberCount);
-            if (m.type === 'split') {
-                myShare += (poolSplit / participantCount);
-            }
-            // まずは切り捨てで仮の金額を決める
+            if (m.type === 'split') myShare += (poolSplit / participantCount);
             m.tempPay = Math.max(0, Math.floor(myShare - m.gift));
         });
 
-        // 2. 切り捨てによって生じた「不足分」を計算
         let currentSum = members.reduce((sum, m) => sum + m.tempPay, 0);
         let diff = targetToCollect - currentSum;
-        
-        // 3. 不足分を「支払いがある人」に1円ずつ順番に配る（これで一人に集中しない）
         let realPayers = members.filter(m => m.tempPay > 0);
         if (realPayers.length > 0) {
             let i = 0;
             while (diff > 0) {
                 realPayers[i % realPayers.length].tempPay += 1;
-                diff--;
-                i++;
+                diff--; i++;
             }
-        } else if (diff > 0 && members.length > 0) {
-            // 万が一、全員カンパでtempPayが0だが合計が合わない場合（稀）
-            members[0].tempPay += diff;
         }
 
         document.getElementById('targetTotalDisplay').textContent = targetToCollect.toLocaleString();
@@ -185,6 +183,27 @@
             const el = document.getElementById(`pay-val-${i}`);
             if (el) el.textContent = m.tempPay.toLocaleString();
         });
+    }
+
+    // 個別メッセージ生成ロジック
+    function createMessage(index) {
+        const m = members[index];
+        let detailText = "【精算内訳】\n";
+        receipts.forEach(r => {
+            detailText += `・${r.label}: ${(r.price * r.qty).toLocaleString()}円\n`;
+        });
+        
+        return `${m.name}さん、お疲れ様です！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n\nよろしくお願いします！`;
+    }
+
+    function sendLine(index) {
+        const text = createMessage(index);
+        window.location.href = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
+    }
+
+    function copyIndividual(index) {
+        const text = createMessage(index);
+        navigator.clipboard.writeText(text).then(() => alert(`${members[index].name}さん用の詳細付き文面をコピーしました！`));
     }
 
     function copyToClipboard() {
@@ -206,14 +225,12 @@
         }
 
         const collectTarget = Math.max(0, grandTotal - givers.reduce((sum, m) => sum + m.gift, 0));
-        text += `\n--- 💰 当日のお支払（集金目標: ${collectTarget.toLocaleString()}円） ---\n`;
+        text += `\n--- 💰 お支払一覧（目標: ${collectTarget.toLocaleString()}円） ---\n`;
         members.forEach(m => { 
-            if(m.tempPay > 0 || m.type === 'split') {
-                text += `${m.name}: ${m.tempPay.toLocaleString()}円\n`; 
-            }
+            if(m.tempPay > 0 || m.type === 'split') text += `${m.name}: ${m.tempPay.toLocaleString()}円\n`; 
         });
         text += "\nご確認よろしくお願いします！";
-        navigator.clipboard.writeText(text).then(() => alert("均等精算結果をコピーしました！"));
+        navigator.clipboard.writeText(text).then(() => alert("全員分の精算結果をコピーしました！"));
     }
 </script>
 </body>
