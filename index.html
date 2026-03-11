@@ -3,43 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="割り勘Pro">
-    <title>割り勘精算 Pro - 最終修正版</title>
+    <title>割り勘精算 Pro</title>
     <style>
         :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; -webkit-text-size-adjust: 100%; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; }
         .status-box { background: #1C1C1E; color: white; padding: 18px; border-radius: 12px; margin-bottom: 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .total-val { font-size: 30px; font-weight: bold; color: #34C759; margin-top: 5px; }
         .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h2 { font-size: 14px; margin: 0 0 12px 0; color: #666; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 8px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; color: var(--text); }
-        .target-select { font-size: 14px; font-weight: bold; color: var(--primary); background-color: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; height: 44px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        .file-box { background: #FFF; border: 2px dashed var(--primary); padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 20px; color: var(--primary); font-weight: bold; cursor: pointer; }
+        .target-select { font-size: 15px; font-weight: bold; color: var(--primary); background: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; }
         .item-row { display: grid; grid-template-columns: 1.8fr 0.6fr 1.2fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
-        .btn-del { background: #FF3B30; color: white; border: none; border-radius: 6px; height: 42px; font-weight: bold; font-size: 18px; }
-        .member-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 8px solid #34C759; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .member-card.remote { border-left-color: #5856D6; background: #F9F9FB; }
-        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-        .pay-display { font-weight: bold; font-size: 24px; color: var(--primary); text-align: right; background: #F2F2F7; border-radius: 8px; padding: 10px; border: 1px solid #D1D1D6; }
-        .btn-add { background: #E5E5EA; color: #333; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 10px; }
-        .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; box-shadow: 0 5px 20px rgba(0,122,255,0.4); z-index: 200; }
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-        .btn-line { background: var(--line); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .btn-sub { background: #8E8E93; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
-        .file-box { background: #FFF; border: 2px dashed var(--primary); padding: 15px; text-align: center; border-radius: 12px; margin-bottom: 20px; color: var(--primary); font-weight: bold; font-size: 15px; cursor: pointer; }
+        .btn-del { background: #CCC; border: none; border-radius: 6px; height: 42px; font-weight: bold; cursor: pointer; }
+        .member-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 8px solid #CCC; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .member-card.both { border-left-color: #34C759; } 
+        .member-card.pay-only { border-left-color: #AF52DE; } 
+        .member-card.join-only { border-left-color: #FF9500; } 
+        .member-card.none { border-left-color: #8E8E93; opacity: 0.6; }
+        .input-group-3 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; margin-top: 10px; }
+        .pay-display { font-weight: bold; font-size: 20px; color: var(--primary); text-align: right; background: #F2F2F7; border-radius: 8px; padding: 8px; border: 1px solid #D1D1D6; }
+        .btn-add { background: #E5E5EA; color: #333; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .btn-line { background: var(--line); color: white; border: none; border-radius: 8px; padding: 0 12px; height: 42px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; z-index: 200; box-shadow: 0 5px 20px rgba(0,122,255,0.4); }
     </style>
 </head>
 <body>
 
     <div class="status-box">
-        <div style="font-size: 12px; opacity: 0.9;">集めるべき合計（集金目標）</div>
+        <div style="font-size: 12px; opacity: 0.9;">実際にかかる費用（経費合計）</div>
         <div class="total-val"><span id="targetTotalDisplay">0</span> 円</div>
     </div>
 
     <div class="card" style="border: 1px solid #FFCC00; background: #FFF9E6;">
-        <h2>🏦 送金先設定（メッセージに自動追記）</h2>
-        <textarea id="paymentInfo" placeholder="例：PayPay ID: sample123&#13;&#10;楽天ペイ: (URL)など" style="font-size: 13px; height: 60px;"></textarea>
+        <input type="text" id="paymentInfo" placeholder="送金先情報（PayPay  楽天ペイなど）">
     </div>
 
     <div class="file-box" onclick="document.getElementById('memberFile').click()">
@@ -48,29 +45,26 @@
     </div>
 
     <div class="card">
-        <h2>🧾 項目と負担設定</h2>
+        <h2>🧾 経費の内訳（負担範囲を選択）</h2>
         <div id="receiptList"></div>
-        <button class="btn-add" onclick="addReceipt()">＋ 新しい項目を追加</button>
+        <button class="btn-add" onclick="addReceipt()">＋ 項目を追加</button>
     </div>
 
-    <h2>👥 メンバーとカンパ額</h2>
+    <h2>👥 メンバー（役割と個別の実費）</h2>
     <div id="memberList"></div>
+    
     <button class="btn-add" style="background:white; border:2px dashed #CCC;" onclick="addMember()">＋ メンバーを手動追加</button>
 
-    <button class="btn-copy" onclick="copyToClipboard()">精算結果をまとめてコピー</button>
+    <button class="btn-copy" onclick="copyToClipboard()">精算結果（明細付）をコピー</button>
 
 <script>
     let receipts = [
-        { label: '会場費', price: 1200, qty: 1, target: 'all' },
-        { label: 'お弁当', price: 1000, qty: 10, target: 'split_only' }
+        { label: '弁当1', price: 1200, qty: 3, target: 'join_only' },
+        { label: '弁当2', price: 1200, qty: 10, target: 'join_only' }
     ];
+    let members = [{ name: '幹事', type: 'both', personal: 0, gift: 0 }];
 
-    let members = [
-        { name: '幹事', type: 'split', gift: 0, tempPay: 0 },
-        { name: '参加者1', type: 'split', gift: 0, tempPay: 0 }
-    ];
-
-    window.onload = () => { renderAll(); };
+    window.onload = () => renderAll();
 
     function renderAll() {
         renderReceipts();
@@ -84,7 +78,7 @@
     }
 
     function addMember() {
-        members.push({ name: '新メンバー', type: 'split', gift: 0, tempPay: 0 });
+        members.push({ name: '新規', type: 'both', personal: 0, gift: 0 });
         renderAll();
     }
 
@@ -95,9 +89,8 @@
         reader.onload = (e) => {
             const names = e.target.result.split(/\r?\n/).filter(n => n.trim() !== "");
             if (names.length > 0) {
-                // ここで正しく初期データをセット
-                members = names.map(n => ({ name: n.trim(), type: 'split', gift: 0, tempPay: 0 }));
-                renderAll(); // これによりrenderMembersとupdateCalculationsが走る
+                members = names.map(n => ({ name: n.trim(), type: 'both', personal: 0, gift: 0 }));
+                renderAll();
             }
         };
         reader.readAsText(file);
@@ -114,8 +107,8 @@
                     <button class="btn-del" onclick="receipts.splice(${i},1); renderAll();">✕</button>
                 </div>
                 <select class="target-select" onchange="receipts[${i}].target=this.value; updateCalculations();">
-                    <option value="all" ${r.target==='all'?'selected':''}>👥 全員で割り勘</option>
-                    <option value="split_only" ${r.target==='split_only'?'selected':''}>🍴 参加者のみで割り勘</option>
+                    <option value="all" ${r.target==='all'?'selected':''}>👥 負担する人全員(✅💜)で等分</option>
+                    <option value="join_only" ${r.target==='join_only'?'selected':''}>🍴 実際に参加する人(✅🍊)のみで等分</option>
                 </select>
             </div>
         `).join('');
@@ -124,114 +117,88 @@
     function renderMembers() {
         const list = document.getElementById('memberList');
         list.innerHTML = members.map((m, i) => `
-            <div class="member-card ${m.type}" id="m-card-${i}">
+            <div class="member-card ${m.type}">
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" value="${m.name}" oninput="members[${i}].name=this.value" style="flex:2; font-weight:bold;">
-                    <select onchange="members[${i}].type=this.value; updateCalculations(); document.getElementById('m-card-${i}').className='member-card '+this.value;" style="width:80px;">
-                        <option value="split" ${m.type==='split'?'selected':''}>参加</option>
-                        <option value="remote" ${m.type==='remote'?'selected':''}>不参加</option>
-                    </select>
-                    <button class="btn-del" style="width:40px; height:40px;" onclick="members.splice(${i},1); renderAll();">✕</button>
+                    <input type="text" value="${m.name}" oninput="members[${i}].name=this.value" style="font-weight:bold; flex:1;">
+                    <button class="btn-line" onclick="sendLine(${i})">LINE</button>
+                    <button style="background:none; border:none; font-size:18px;" onclick="members.splice(${i},1); renderAll();">✕</button>
                 </div>
-                <div class="input-group">
-                    <div>
-                        <span style="font-size:11px; color:#34C759; font-weight:bold;">🎁 カンパ入力</span>
-                        <input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();" style="border: 2px solid #34C759 !important; font-weight: bold; background: #F0FFF4;">
-                    </div>
-                    <div>
-                        <span style="font-size:11px; color:#666; font-weight:bold;">💰 当日支払額</span>
-                        <div class="pay-display" id="pay-val-${i}">0</div>
-                    </div>
-                </div>
-                <div class="action-grid">
-                    <button onclick="sendLine(${i})" class="btn-line">LINEで送る</button>
-                    <button onclick="copyIndividual(${i})" class="btn-sub">文面をコピー</button>
+                <select onchange="members[${i}].type=this.value; renderAll();" style="margin-top:8px;">
+                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加＋分担金払う</option>
+                    <option value="pay-only" ${m.type==='pay-only'?'selected':''}>💜 不参加＋分担金払う</option>
+                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加＋分担金なし(実費等分に参加)</option>
+                    <option value="none" ${m.type==='none'?'selected':''}>⚪️ 全く何もしない</option>
+                </select>
+                <div class="input-group-3">
+                    <div><span style="font-size:10px; font-weight:bold; color:#007AFF;">🍱 個別実費</span>
+                    <input type="number" value="${m.personal}" oninput="members[${i}].personal=parseFloat(this.value)||0; updateCalculations();"></div>
+                    <div><span style="font-size:10px; font-weight:bold; color:#34C759;">🎁 カンパ</span>
+                    <input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();"></div>
+                    <div><span style="font-size:10px; font-weight:bold;">💰 支払額</span>
+                    <div class="pay-display" id="pay-val-${i}">0</div></div>
                 </div>
             </div>
         `).join('');
     }
 
     function updateCalculations() {
-        let poolAll = 0, poolSplit = 0;
-        receipts.forEach(r => { 
-            const total = r.price * r.qty;
-            if(r.target==='all') poolAll += total; else poolSplit += total; 
-        });
-
-        const totalCost = poolAll + poolSplit;
-        const totalGift = members.reduce((sum, m) => sum + m.gift, 0);
-        const targetToCollect = Math.max(0, totalCost - totalGift);
+        members.forEach(m => { m.tempPay = 0; m.details = []; });
         
-        const participants = members.filter(m => m.type === 'split');
-        const allMemberCount = members.length || 1;
-        const participantCount = participants.length || 1;
-
-        members.forEach(m => {
-            let myShare = (poolAll / allMemberCount);
-            if (m.type === 'split') myShare += (poolSplit / participantCount);
-            m.tempPay = Math.max(0, Math.floor(myShare - m.gift));
-        });
-
-        let currentSum = members.reduce((sum, m) => sum + m.tempPay, 0);
-        let diff = targetToCollect - currentSum;
-        let realPayers = members.filter(m => m.tempPay > 0);
-        if (realPayers.length > 0) {
-            let i = 0;
-            while (diff > 0) {
-                realPayers[i % realPayers.length].tempPay += 1;
-                diff--; i++;
-            }
-        }
-
-        document.getElementById('targetTotalDisplay').textContent = targetToCollect.toLocaleString();
-        members.forEach((m, i) => {
-            const el = document.getElementById(`pay-val-${i}`);
-            if (el) el.textContent = m.tempPay.toLocaleString();
-        });
-    }
-
-    function createMessage(index) {
-        const m = members[index];
-        const payInfo = document.getElementById('paymentInfo').value;
-        let detailText = "【精算内訳】\n";
         receipts.forEach(r => {
-            detailText += `・${r.label}: ${(r.price * r.qty).toLocaleString()}円\n`;
+            const cost = r.price * r.qty;
+            let targetMembers = [];
+            if (r.target === 'all') {
+                targetMembers = members.filter(m => m.type === 'both' || m.type === 'pay-only');
+            } else {
+                targetMembers = members.filter(m => m.type === 'both' || m.type === 'join-only');
+            }
+
+            if (targetMembers.length > 0) {
+                const share = Math.floor(cost / targetMembers.length);
+                targetMembers.forEach(m => {
+                    m.tempPay += share;
+                    m.details.push(`${r.label}: ${share.toLocaleString()}円`);
+                });
+            }
         });
-        let msg = `${m.name}兄弟姉妹
-        、食事招待の
-        ご協力
-        ありがとうございます
-    　　　！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n`;
-        if (payInfo.trim() !== "") msg += `\n--- 💳 送金先 ---\n${payInfo}\n`;
-        msg += "\nよろしくお願いします！";
-        return msg;
+
+        let totalExpenses = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0);
+        let totalPersonal = members.reduce((sum, m) => sum + m.personal, 0);
+
+        members.forEach((m, i) => {
+            if (m.personal > 0) m.details.push(`個別実費: ${m.personal.toLocaleString()}円`);
+            if (m.gift > 0) m.details.push(`カンパ差引: -${m.gift.toLocaleString()}円`);
+            m.finalPay = Math.max(0, m.tempPay + m.personal - m.gift);
+            const el = document.getElementById(`pay-val-${i}`);
+            if (el) el.textContent = m.finalPay.toLocaleString();
+        });
+
+        document.getElementById('targetTotalDisplay').textContent = (totalExpenses + totalPersonal).toLocaleString();
     }
 
     function sendLine(index) {
-        const text = createMessage(index);
-        window.location.href = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
-    }
-
-    function copyIndividual(index) {
-        const text = createMessage(index);
-        navigator.clipboard.writeText(text).then(() => alert(`${members[index].name}さん用の詳細付き文面をコピーしました！`));
+        const m = members[index];
+        const payInfo = document.getElementById('paymentInfo').value;
+        let msg = `${m.name}兄弟姉妹。食事招待のご協力ありがとうございます。今回の食事招待でかかった費用のお知らせです。\n\n【合計】${m.finalPay.toLocaleString()}円\n`;
+        if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
+        if (payInfo) msg += `\n送金先:\n${payInfo}`;
+        
+        const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
+        window.location.href = lineUrl;
     }
 
     function copyToClipboard() {
-        let text = "【精算詳細】\n\n--- 🧾 経費内訳 ---\n";
-        let grandTotal = 0;
-        receipts.forEach(r => { 
-            const itemTotal = r.qty * r.price;
-            grandTotal += itemTotal;
-            text += `${r.label}: ${r.qty}×${r.price.toLocaleString()}円 ＝ ${itemTotal.toLocaleString()}円\n`; 
+        let text = "【精算結果（明細）】\n\n";
+        members.forEach(m => {
+            if(m.type !== 'none') {
+                text += `● ${m.name}: ${m.finalPay.toLocaleString()}円\n`;
+                if (m.details.length > 0) text += `   (内訳: ${m.details.join(' / ')})\n`;
+                text += `\n`;
+            }
         });
         const payInfo = document.getElementById('paymentInfo').value;
-        if (payInfo.trim() !== "") text += `\n--- 💳 送金先 ---\n${payInfo}\n`;
-        text += `\n--- 💰 お支払一覧 ---\n`;
-        members.forEach(m => { 
-            if(m.tempPay > 0 || m.type === 'split') text += `${m.name}: ${m.tempPay.toLocaleString()}円\n`; 
-        });
-        navigator.clipboard.writeText(text).then(() => alert("全員分の精算結果をコピーしました！"));
+        if(payInfo) text += `送金先: ${payInfo}\n`;
+        navigator.clipboard.writeText(text).then(() => alert("明細付きの結果をコピーしました！"));
     }
 </script>
 </body>
