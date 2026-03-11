@@ -197,7 +197,11 @@
         receipts.forEach(r => {
             detailText += `・${r.label}: ${(r.price * r.qty).toLocaleString()}円\n`;
         });
-        let msg = `${m.name}さん、お疲れ様です！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n`;
+        let msg = `${m.name}兄弟姉妹
+        、食事招待の
+        ご協力
+        ありがとうございます
+    　　　！\n\n${detailText}\n今回の精算額は\n【 ${m.tempPay.toLocaleString()}円 】です。\n`;
         if (payInfo.trim() !== "") msg += `\n--- 💳 送金先 ---\n${payInfo}\n`;
         msg += "\nよろしくお願いします！";
         return msg;
