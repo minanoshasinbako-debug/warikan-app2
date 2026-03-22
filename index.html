@@ -177,7 +177,7 @@
 
     function sendLine(index) {
         const m = members[index];
-        let msg = `\n親愛なる`${m.name}${getSuffix(m.gender)}\n先日の食事招待の精算のお知らせです。\n\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
+        let msg = `${m.name}${getSuffix(m.gender)}\n先日の食事招待の精算のお知らせです。\n\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
         if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
         const payInfo = document.getElementById('paymentInfo').value;
         if (payInfo) msg += `\n備考:\n${payInfo}`;
