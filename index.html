@@ -66,7 +66,7 @@
     function renderAll() { renderReceipts(); renderMembers(); updateCalculations(); }
 
     function guessGender(name) {
-        const femaleEnds = ['子', '美', '香', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華', 'み', 'な', 'こ', 'よ'];
+        const femaleEnds = ['子', '美', '香','佳','エ', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華', 'み', 'な', 'こ', 'よ'];
         return femaleEnds.includes(name.slice(-1)) ? 'female' : 'male';
     }
 
