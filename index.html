@@ -185,7 +185,7 @@
     }
 
     function copyToClipboard() {
-        let text = "【精算結果（最終版）】\n------------------------\n\n";
+        let text = "【精算結果】\n------------------------\n\n";
         members.forEach(m => {
             text += `● ${m.name}${getSuffix(m.gender)}: ${m.finalPay.toLocaleString()}円\n`;
             if (m.details.length > 0) text += `   (内訳: ${m.details.join(' / ')})\n`;
