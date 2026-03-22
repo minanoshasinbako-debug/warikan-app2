@@ -103,9 +103,9 @@
                     <button class="gender-btn ${m.gender==='none'?'active':''}" onclick="members[${i}].gender='none'; renderMembers();">？</button>
                 </div>
                 <select onchange="members[${i}].type=this.value; updateCalculations();" style="margin-top:8px;">
-                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加（共通経費を負担する）</option>
+                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加者1（自分の食事代と共通経費を負担する）</option>
                     <option value="pay-only" ${m.type==='pay-only'?'selected':''}>💜 不参加（共通経費のみ負担する）</option>
-                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 招待客（自分の食事代のみ・カンパで賄う）</option>
+                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加者2（自分の食事代のみ）</option>
                 </select>
                 <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:8px; margin-top:10px;">
                     <div><span style="font-size:10px;">🎁 カンパ</span><input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; updateCalculations();"></div>
