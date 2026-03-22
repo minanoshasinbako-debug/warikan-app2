@@ -81,7 +81,7 @@
                     <button class="btn-del" onclick="receipts.splice(${i},1); renderAll();">✕</button>
                 </div>
                 <select class="target-select" onchange="receipts[${i}].target=this.value; updateCalculations();">
-                    <option value="all" ${r.target==='all'?'selected':''}>👥 全員(✅💜)で等分</option>
+                    <option value="all" ${r.target==='all'?'selected':''}>👥 負担希望者(✅💜)で等分</option>
                     <option value="join_only" ${r.target==='join_only'?'selected':''}>🍴 参加者(✅🍊)のみで等分</option>
                 </select>
             </div>
