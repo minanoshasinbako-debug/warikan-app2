@@ -98,8 +98,8 @@
                     <button style="background:none; border:none; font-size:18px;" onclick="members.splice(${i},1); renderAll();">✕</button>
                 </div>
                 <div class="gender-select">
-                    <button class="gender-btn ${m.gender==='male'?'active':''}" onclick="members[${i}].gender='male'; renderMembers();">兄</button>
-                    <button class="gender-btn ${m.gender==='female'?'active':''}" onclick="members[${i}].gender='female'; renderMembers();">姉</button>
+                    <button class="gender-btn ${m.gender==='male'?'active':''}" onclick="members[${i}].gender='male'; renderMembers();">兄弟</button>
+                    <button class="gender-btn ${m.gender==='female'?'active':''}" onclick="members[${i}].gender='female'; renderMembers();">姉妹</button>
                     <button class="gender-btn ${m.gender==='none'?'active':''}" onclick="members[${i}].gender='none'; renderMembers();">？</button>
                 </div>
                 <select onchange="members[${i}].type=this.value; updateCalculations();" style="margin-top:8px;">
