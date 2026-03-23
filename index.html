@@ -3,82 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>割り勘精算　保存管理版</title>
+    <title>割り勘精算 ふ22 決定版(初期値0)</title>
     <style>
-        :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
+        :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; --danger: #FF3B30; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; }
         .status-box { background: #1C1C1E; color: white; padding: 15px; border-radius: 12px; margin-bottom: 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .total-val { font-size: 24px; font-weight: bold; color: #34C759; }
-        .remaining-val { font-size: 18px; color: #FF3B30; font-weight: bold; }
+        .remaining-val { font-size: 18px; color: var(--danger); font-weight: bold; }
+        .collection-list { background: #FFF; border-radius: 12px; padding: 15px; margin-top: 10px; border: 1px solid #D1D1D6; }
+        .collection-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #EEE; font-size: 15px; }
+        .collection-item.unpaid { color: var(--danger); font-weight: bold; }
+        .collection-item.paid { color: #8E8E93; text-decoration: line-through; }
         .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h2 { font-size: 14px; margin: 0 0 12px 0; color: #666; font-weight: bold; border-left: 4px solid var(--primary); padding-left: 8px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        .target-select { font-size: 13px; font-weight: bold; color: var(--primary); background: #F0F7FF; border: 2px solid var(--primary); margin-top: 8px; padding: 8px; }
-        .item-row { display: grid; grid-template-columns: 1.8fr 0.6fr 1.2fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
-        .btn-del { background: #CCC; border: none; border-radius: 6px; height: 42px; font-weight: bold; cursor: pointer; }
+        .input-group { position: relative; display: flex; align-items: center; width: 100%; }
+        .unit { position: absolute; right: 8px; color: #8E8E93; font-size: 12px; pointer-events: none; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; }
+        input[type="number"] { padding-right: 25px; } /* 単位とかぶらないよう調整 */
+        .item-row { display: grid; grid-template-columns: 1.5fr 0.8fr 1fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
+        .btn-del { background: #EEE; color: #666; border: none; border-radius: 6px; height: 42px; font-weight: bold; cursor: pointer; }
         .member-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 8px solid #CCC; transition: 0.3s; }
-        .member-card.paid { background: #E5E5EA; border-left-color: #8E8E93; opacity: 0.7; }
-        .member-card.paid .name-input { text-decoration: line-through; color: #8E8E93; }
+        .member-card.paid { background: #F2F2F7; border-left-color: #8E8E93; opacity: 0.7; }
         .gender-select { display: flex; gap: 4px; margin-top: 8px; }
-        .gender-btn { flex: 1; padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #D1D1D6; background: #F2F2F7; }
+        .gender-btn { flex: 1; padding: 8px; font-size: 13px; border-radius: 6px; border: 1px solid #D1D1D6; background: #F2F2F7; }
         .gender-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .pay-display { font-weight: bold; font-size: 20px; color: var(--primary); text-align: right; background: #F2F2F7; border-radius: 8px; padding: 8px; border: 1px solid #D1D1D6; }
         .btn-add { background: #E5E5EA; color: #333; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
         .btn-line { background: var(--line); color: white; border: none; border-radius: 8px; padding: 0 10px; height: 42px; font-weight: bold; }
         .btn-paid-toggle { background: white; border: 2px solid var(--line); color: var(--line); border-radius: 8px; padding: 0 10px; height: 42px; font-weight: bold; }
         .paid .btn-paid-toggle { background: var(--line); color: white; }
-        .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; z-index: 200; }
-        .btn-reset { background: #FF3B30; color: white; border: none; padding: 10px; border-radius: 8px; margin-top: 30px; width: 100%; font-size: 12px; opacity: 0.6; }
+        .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; z-index: 200; box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
     </style>
 </head>
 <body>
 
     <div class="status-box">
-        <div>経費合計: <span class="total-val" id="targetTotalDisplay">0</span> 円</div>
-        <div style="margin-top:5px; font-size: 13px;">未回収残金: <span class="remaining-val" id="remainingDisplay">0</span> 円</div>
+        <div>集める総額: <span class="total-val" id="targetTotalDisplay">0</span> 円</div>
+        <div style="margin-top:5px; font-size: 13px;">未回収金: <span class="remaining-val" id="remainingDisplay">0</span> 円</div>
+    </div>
+
+    <div class="collection-list">
+        <h2>📊 集金チェックリスト</h2>
+        <div id="simpleStatusList"></div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h2>📌 案内文（LINEに記載）</h2>
+        <input type="text" id="paymentInfo" placeholder="送金方法などをご記入ください" oninput="saveData()">
     </div>
 
     <div class="card">
-        <h2>📌 案内文（LINE添付用）</h2>
-        <input type="text" id="paymentInfo" placeholder="例：PayPayまたは現金でお願いします" oninput="saveData()">
-    </div>
-
-    <div class="card">
-        <h2>🧾 経費内訳</h2>
+        <h2>🧾 経費の内訳</h2>
         <div id="receiptList"></div>
         <button class="btn-add" onclick="addReceipt()">＋ 項目を追加</button>
     </div>
 
-    <h2>👥 メンバー（入金されたら「未」をタップ）</h2>
+    <h2>👥 メンバー詳細</h2>
     <div id="memberList"></div>
     <button class="btn-add" style="background:white; border:2px dashed #CCC;" onclick="addMember()">＋ メンバーを手動追加</button>
-    <button class="btn-add" onclick="document.getElementById('memberFile').click()">📁 メンバーリスト読込 (.txt)</button>
+    <button class="btn-add" onclick="document.getElementById('memberFile').click()">📁 リスト読込 (.txt)</button>
     <input type="file" id="memberFile" accept=".txt" onchange="loadMemberList(event)" style="display:none;">
 
-    <button class="btn-reset" onclick="resetAllData()">⚠️ 全データをリセットして初期化する</button>
+    <button style="background:#CCC; border:none; padding:10px; border-radius:8px; margin-top:30px; width:100%; font-size:12px;" onclick="resetAllData()">⚠️ 全データを削除</button>
 
-    <button class="btn-copy" onclick="copyToClipboard()">精算結果をコピー（明細付）</button>
+    <button class="btn-copy" onclick="copyToClipboard()">結果をまとめてコピー</button>
 
 <script>
-    const STORAGE_KEY = 'wari_kan_f22_data';
+    const STORAGE_KEY = 'wari_kan_f22_final_v3';
+    // サンプル項目の初期値も0に設定
     let receipts = [
-        { label: '招待者分', price: 0,qty: 0,target: 'all' },
-        { label: '参加者個人分', price: 0, qty: 0,target: 'join_only' }
+        { label: '招待者分', price: 0, qty: 0, target: 'all' },
+        { label: 'お弁当代', price: 0, qty: 0, target: 'join_only' }
     ];
     let members = [{ name: '幹事', type: 'both', gift: 0, gender: 'none', isPaid: false }];
 
-    // 起動時に保存データを読み込む
-    window.onload = () => {
-        loadData();
-        renderAll();
-    };
+    window.onload = () => { loadData(); renderAll(); };
 
     function saveData() {
-        const data = {
-            receipts: receipts,
-            members: members,
-            paymentInfo: document.getElementById('paymentInfo').value
-        };
+        const data = { receipts, members, paymentInfo: document.getElementById('paymentInfo').value };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         updateCalculations();
     }
@@ -87,18 +89,13 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             const data = JSON.parse(saved);
-            receipts = data.receipts || receipts;
-            members = data.members || members;
+            receipts = data.receipts;
+            members = data.members;
             document.getElementById('paymentInfo').value = data.paymentInfo || "";
         }
     }
 
-    function resetAllData() {
-        if (confirm("全ての入力内容と入金記録を削除して初期に戻しますか？")) {
-            localStorage.removeItem(STORAGE_KEY);
-            location.reload();
-        }
-    }
+    function resetAllData() { if (confirm("データをリセットしますか？")) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
 
     function renderAll() { renderReceipts(); renderMembers(); updateCalculations(); }
 
@@ -108,13 +105,18 @@
             <div style="margin-bottom:15px; border-bottom:1px solid #EEE; padding-bottom:10px;">
                 <div class="item-row">
                     <input type="text" value="${r.label}" oninput="receipts[${i}].label=this.value; saveData();">
-                    <input type="number" value="${r.qty}" oninput="receipts[${i}].qty=parseFloat(this.value)||0; saveData();">
-                    <input type="number" value="${r.price}" oninput="receipts[${i}].price=parseFloat(this.value)||0; saveData();">
+                    <div class="input-group">
+                        <input type="number" value="${r.qty}" step="any" oninput="receipts[${i}].qty=parseFloat(this.value)||0; saveData();">
+                        <span class="unit">個</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" value="${r.price}" step="any" oninput="receipts[${i}].price=parseFloat(this.value)||0; saveData();">
+                        <span class="unit">円</span>
+                    </div>
                     <button class="btn-del" onclick="receipts.splice(${i},1); renderAll(); saveData();">✕</button>
                 </div>
                 <select class="target-select" onchange="receipts[${i}].target=this.value; saveData();">
-                    <option value="all" ${r.target==='all'?'selected':''}>👥 費用負担希望者
-                    (✅💜)で等分</option>
+                    <option value="all" ${r.target==='all'?'selected':''}>👥 負担希望者(✅💜)で等分</option>
                     <option value="join_only" ${r.target==='join_only'?'selected':''}>🍴 参加者(✅🍊)のみで等分</option>
                 </select>
             </div>
@@ -132,14 +134,14 @@
                     <button style="background:none; border:none; font-size:18px;" onclick="members.splice(${i},1); renderAll(); saveData();">✕</button>
                 </div>
                 <div class="gender-select">
-                    <button class="gender-btn ${m.gender==='male'?'active':''}" onclick="members[${i}].gender='male'; renderMembers(); saveData();">兄</button>
-                    <button class="gender-btn ${m.gender==='female'?'active':''}" onclick="members[${i}].gender='female'; renderMembers(); saveData();">姉</button>
-                    <button class="gender-btn ${m.gender==='none'?'active':''}" onclick="members[${i}].gender='none'; renderMembers(); saveData();">？</button>
+                    <button class="gender-btn ${m.gender==='male'?'active':''}" onclick="members[${i}].gender='male'; renderMembers(); saveData();">兄弟</button>
+                    <button class="gender-btn ${m.gender==='female'?'active':''}" onclick="members[${i}].gender='female'; renderMembers(); saveData();">姉妹</button>
+                    <button class="gender-btn ${m.gender==='none'?'active':''}" onclick="members[${i}].gender='none'; renderMembers(); saveData();">様</button>
                 </div>
                 <select onchange="members[${i}].type=this.value; saveData();" style="margin-top:8px;">
-                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加1（共通経費を負担する）</option>
-                    <option value="pay-only" ${m.type==='pay-only'?'selected':''}>💜 不参加（共通経費のみ負担する）</option>
-                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加2（自分の食事代のみ）</option>
+                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加①(共通＋自己負担)</option>
+                    <option value="pay-only" ${m.type==='pay-only'?'selected':''}>💜 不参加(共通のみ負担)</option>
+                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加②(自己負担のみ)</option>
                 </select>
                 <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:8px; margin-top:10px;">
                     <div><span style="font-size:10px;">🎁 カンパ</span><input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; saveData();"></div>
@@ -149,14 +151,10 @@
         `).join('');
     }
 
-    function togglePaid(index) {
-        members[index].isPaid = !members[index].isPaid;
-        renderMembers();
-        saveData();
-    }
+    function togglePaid(index) { members[index].isPaid = !members[index].isPaid; renderMembers(); saveData(); }
 
     function updateCalculations() {
-        members.forEach(m => { m.tempPay = 0; m.details = []; m.rawCommonShare = 0; });
+        members.forEach(m => { m.tempPay = 0; m.rawCommonShare = 0; });
         let rawTotal = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0);
         document.getElementById('targetTotalDisplay').textContent = rawTotal.toLocaleString();
 
@@ -165,7 +163,7 @@
             let targets = (r.target === 'all') ? members.filter(m => m.type === 'both' || m.type === 'pay-only') : members.filter(m => m.type === 'both' || m.type === 'join-only');
             if (targets.length > 0) {
                 const share = Math.floor(cost / targets.length);
-                targets.forEach(m => { m.tempPay += share; if (r.target === 'all') m.rawCommonShare += share; m.details.push(`${r.label}: ${share.toLocaleString()}円`); });
+                targets.forEach(m => { m.tempPay += share; if (r.target === 'all') m.rawCommonShare += share; });
             }
         });
 
@@ -175,44 +173,44 @@
             let commonReduction = Math.min(commonTargets.reduce((sum, m) => sum + m.rawCommonShare, 0), currentGiftPool);
             let perPersonCommonReduction = Math.floor(commonReduction / commonTargets.length);
             currentGiftPool -= (perPersonCommonReduction * commonTargets.length);
-            commonTargets.forEach(m => { m.tempPay -= perPersonCommonReduction; m.details.push(`招待分還元: -${perPersonCommonReduction.toLocaleString()}円`); });
+            commonTargets.forEach(m => { m.tempPay -= perPersonCommonReduction; });
         }
-
         if (currentGiftPool > 0) {
             let payableMembers = members.filter(m => m.tempPay > 0);
             if (payableMembers.length > 0) {
                 let finalFairReduction = Math.floor(currentGiftPool / payableMembers.length);
-                payableMembers.forEach(m => { m.tempPay -= finalFairReduction; m.details.push(`公平還元: -${finalFairReduction.toLocaleString()}円`); });
+                payableMembers.forEach(m => { m.tempPay -= finalFairReduction; });
             }
         }
 
         let totalRemaining = 0;
+        let simpleHtml = "";
         members.forEach((m, i) => {
             m.finalPay = Math.max(0, m.tempPay - m.gift);
-            if (m.gift > 0) m.details.push(`カンパ充当: -${m.gift.toLocaleString()}円`);
-            const payValElem = document.getElementById(`pay-val-${i}`);
-            if (payValElem) payValElem.textContent = m.finalPay.toLocaleString();
+            const displayElem = document.getElementById(`pay-val-${i}`);
+            if(displayElem) displayElem.textContent = m.finalPay.toLocaleString();
+            simpleHtml += `<div class="collection-item ${m.isPaid ? 'paid' : 'unpaid'}"><span>${m.name}${getSuffix(m.gender)}</span><span>${m.isPaid ? '済' : m.finalPay.toLocaleString() + ' 円'}</span></div>`;
             if (!m.isPaid) totalRemaining += m.finalPay;
         });
+        document.getElementById('simpleStatusList').innerHTML = simpleHtml;
         document.getElementById('remainingDisplay').textContent = totalRemaining.toLocaleString();
     }
 
     function getSuffix(gender) { return gender === 'male' ? '兄弟' : (gender === 'female' ? '姉妹' : '様'); }
+    
     function sendLine(index) {
         const m = members[index];
-        let msg = `親愛なる ${m.name}${getSuffix(m.gender)}\n先日の食事招待の精算のお知らせです。\n\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
-        if (m.details.length > 0) msg += `（内訳: ${m.details.join(' / ')}）\n`;
+        const suffix = getSuffix(m.gender);
+        let msg = `親愛なる ${m.name}${suffix}\n先日の食事招待の精算のお知らせです。\n\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
         const payInfo = document.getElementById('paymentInfo').value;
         if (payInfo) msg += `\n備考:\n${payInfo}`;
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
     }
 
     function copyToClipboard() {
-        let text = "【精算結果（入金管理用）】\n------------------------\n";
-        members.forEach(m => {
-            text += `[${m.isPaid ? '済' : '未'}] ${m.name}${getSuffix(m.gender)}: ${m.finalPay.toLocaleString()}円\n`;
-        });
-        navigator.clipboard.writeText(text).then(() => alert("コピーしました！"));
+        let text = "【精算結果】\n";
+        members.forEach(m => { text += `● ${m.name}${getSuffix(m.gender)}: ${m.finalPay.toLocaleString()}円 (${m.isPaid ? '入金済' : '未入金'})\n`; });
+        navigator.clipboard.writeText(text).then(() => alert("コピーしました"));
     }
 
     function loadMemberList(event) {
@@ -222,14 +220,19 @@
         reader.onload = (e) => {
             const names = e.target.result.split(/\r?\n/).filter(n => n.trim() !== "");
             members = names.map(n => ({ name: n.trim(), type: 'both', gift: 0, gender: guessGender(n.trim()), isPaid: false }));
-            renderAll();
-            saveData();
+            renderAll(); saveData();
         };
         reader.readAsText(file);
     }
-    function guessGender(name) { const femaleEnds = ['子', '美', '香', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華','佳' ,'エ','み', 'な', 'こ', 'よ']; return femaleEnds.includes(name.slice(-1)) ? 'female' : 'male'; }
-    function addReceipt() { receipts.push({ label: '新規', price: 0, qty: 1, target: 'all' }); renderAll(); saveData(); }
-    function addMember() { members.push({ name: '新規', type: 'both', gift: 0, gender: 'none', isPaid: false }); renderAll(); saveData(); }
+
+    function guessGender(name) { 
+        const femaleEnds = ['子', '美', '香', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華', 'み', 'な', 'こ', 'よ', 'エ', '佳']; 
+        return femaleEnds.includes(name.slice(-1)) ? 'female' : 'male'; 
+    }
+    
+    // 追加時の初期値を明確に 0 に設定
+    function addReceipt() { receipts.push({ label: '新規項目', price: 0, qty: 0, target: 'all' }); renderAll(); saveData(); }
+    function addMember() { members.push({ name: '新規氏名', type: 'both', gift: 0, gender: 'none', isPaid: false }); renderAll(); saveData(); }
 </script>
 </body>
 </html>
