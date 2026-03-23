@@ -19,7 +19,7 @@
         .input-group { position: relative; display: flex; align-items: center; width: 100%; }
         .unit { position: absolute; right: 8px; color: #8E8E93; font-size: 12px; pointer-events: none; }
         input, select { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; }
-        input[type="number"] { padding-right: 25px; } /* 単位とかぶらないよう調整 */
+        input[type="number"] { padding-right: 25px; }
         .item-row { display: grid; grid-template-columns: 1.5fr 0.8fr 1fr 40px; gap: 6px; margin-bottom: 4px; align-items: center; }
         .btn-del { background: #EEE; color: #666; border: none; border-radius: 6px; height: 42px; font-weight: bold; cursor: pointer; }
         .member-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 8px solid #CCC; transition: 0.3s; }
@@ -33,6 +33,7 @@
         .btn-paid-toggle { background: white; border: 2px solid var(--line); color: var(--line); border-radius: 8px; padding: 0 10px; height: 42px; font-weight: bold; }
         .paid .btn-paid-toggle { background: var(--line); color: white; }
         .btn-copy { background: var(--primary); color: white; width: calc(100% - 32px); position: fixed; bottom: 20px; left: 16px; padding: 20px; border-radius: 14px; border: none; font-size: 18px; font-weight: bold; z-index: 200; box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
+        .btn-report { background: #5856D6; color: white; width: calc(100% - 32px); position: fixed; bottom: 85px; left: 16px; padding: 12px; border-radius: 10px; border: none; font-size: 14px; font-weight: bold; z-index: 200; }
     </style>
 </head>
 <body>
@@ -66,11 +67,11 @@
 
     <button style="background:#CCC; border:none; padding:10px; border-radius:8px; margin-top:30px; width:100%; font-size:12px;" onclick="resetAllData()">⚠️ 全データを削除</button>
 
+    <button class="btn-report" onclick="copyFullReport()">フルレポートをコピー</button>
     <button class="btn-copy" onclick="copyToClipboard()">結果をまとめてコピー</button>
 
 <script>
     const STORAGE_KEY = 'wari_kan_f22_final_v3';
-    // サンプル項目の初期値も0に設定
     let receipts = [
         { label: '招待者分', price: 0, qty: 0, target: 'all' },
         { label: 'お弁当代', price: 0, qty: 0, target: 'join_only' }
@@ -154,7 +155,7 @@
     function togglePaid(index) { members[index].isPaid = !members[index].isPaid; renderMembers(); saveData(); }
 
     function updateCalculations() {
-        members.forEach(m => { m.tempPay = 0; m.rawCommonShare = 0; });
+        members.forEach(m => { m.tempPay = 0; m.rawCommonShare = 0; m.breakdown = []; });
         let rawTotal = receipts.reduce((sum, r) => sum + (r.price * r.qty), 0);
         document.getElementById('targetTotalDisplay').textContent = rawTotal.toLocaleString();
 
@@ -163,7 +164,11 @@
             let targets = (r.target === 'all') ? members.filter(m => m.type === 'both' || m.type === 'pay-only') : members.filter(m => m.type === 'both' || m.type === 'join-only');
             if (targets.length > 0) {
                 const share = Math.floor(cost / targets.length);
-                targets.forEach(m => { m.tempPay += share; if (r.target === 'all') m.rawCommonShare += share; });
+                targets.forEach(m => { 
+                    m.tempPay += share; 
+                    if (share > 0) m.breakdown.push({label: r.label, amount: share});
+                    if (r.target === 'all') m.rawCommonShare += share; 
+                });
             }
         });
 
@@ -173,13 +178,19 @@
             let commonReduction = Math.min(commonTargets.reduce((sum, m) => sum + m.rawCommonShare, 0), currentGiftPool);
             let perPersonCommonReduction = Math.floor(commonReduction / commonTargets.length);
             currentGiftPool -= (perPersonCommonReduction * commonTargets.length);
-            commonTargets.forEach(m => { m.tempPay -= perPersonCommonReduction; });
+            commonTargets.forEach(m => { 
+                m.tempPay -= perPersonCommonReduction; 
+                if (perPersonCommonReduction > 0) m.breakdown.push({label: "カンパ充当(共通分)", amount: -perPersonCommonReduction});
+            });
         }
         if (currentGiftPool > 0) {
             let payableMembers = members.filter(m => m.tempPay > 0);
             if (payableMembers.length > 0) {
                 let finalFairReduction = Math.floor(currentGiftPool / payableMembers.length);
-                payableMembers.forEach(m => { m.tempPay -= finalFairReduction; });
+                payableMembers.forEach(m => { 
+                    m.tempPay -= finalFairReduction; 
+                    if (finalFairReduction > 0) m.breakdown.push({label: "カンパ充当(全体分)", amount: -finalFairReduction});
+                });
             }
         }
 
@@ -201,7 +212,14 @@
     function sendLine(index) {
         const m = members[index];
         const suffix = getSuffix(m.gender);
-        let msg = `親愛なる ${m.name}${suffix}\n先日の食事招待の精算のお知らせです。\n\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
+        let msg = `親愛なる ${m.name}${suffix}\n先日の精算のお知らせです。\n\n`;
+        msg += `【内訳】\n`;
+        m.breakdown.forEach(item => {
+            msg += `・${item.label}: ${item.amount.toLocaleString()}円\n`;
+        });
+        if (m.gift > 0) msg += `・自己カンパ: -${m.gift.toLocaleString()}円\n`;
+        msg += `\n【合計金額】${m.finalPay.toLocaleString()}円\n`;
+        
         const payInfo = document.getElementById('paymentInfo').value;
         if (payInfo) msg += `\n備考:\n${payInfo}`;
         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
@@ -211,6 +229,16 @@
         let text = "【精算結果】\n";
         members.forEach(m => { text += `● ${m.name}${getSuffix(m.gender)}: ${m.finalPay.toLocaleString()}円 (${m.isPaid ? '入金済' : '未入金'})\n`; });
         navigator.clipboard.writeText(text).then(() => alert("コピーしました"));
+    }
+
+    function copyFullReport() {
+        let text = "【精算フルレポート】\n\n";
+        text += "▼ 経費詳細\n";
+        receipts.forEach(r => { text += `・${r.label}: ${r.price.toLocaleString()}円 × ${r.qty} = ${(r.price*r.qty).toLocaleString()}円\n`; });
+        text += `\n合計: ${document.getElementById('targetTotalDisplay').textContent}円\n\n`;
+        text += "▼ 個人別支払額\n";
+        members.forEach(m => { text += `・${m.name}${getSuffix(m.gender)}: ${m.finalPay.toLocaleString()}円 (${m.isPaid ? '済' : '未'})\n`; });
+        navigator.clipboard.writeText(text).then(() => alert("フルレポートをコピーしました"));
     }
 
     function loadMemberList(event) {
@@ -230,7 +258,6 @@
         return femaleEnds.includes(name.slice(-1)) ? 'female' : 'male'; 
     }
     
-    // 追加時の初期値を明確に 0 に設定
     function addReceipt() { receipts.push({ label: '新規項目', price: 0, qty: 0, target: 'all' }); renderAll(); saveData(); }
     function addMember() { members.push({ name: '新規氏名', type: 'both', gift: 0, gender: 'none', isPaid: false }); renderAll(); saveData(); }
 </script>
