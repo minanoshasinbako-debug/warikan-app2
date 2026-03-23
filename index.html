@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>割り勘精算 ふ22 保存管理版</title>
+    <title>割り勘精算　保存管理版</title>
     <style>
         :root { --primary: #007AFF; --line: #06C755; --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; padding-bottom: 120px; }
@@ -136,9 +136,9 @@
                     <button class="gender-btn ${m.gender==='none'?'active':''}" onclick="members[${i}].gender='none'; renderMembers(); saveData();">？</button>
                 </div>
                 <select onchange="members[${i}].type=this.value; saveData();" style="margin-top:8px;">
-                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加（共通経費を負担する）</option>
+                    <option value="both" ${m.type==='both'?'selected':''}>✅ 参加1（共通経費を負担する）</option>
                     <option value="pay-only" ${m.type==='pay-only'?'selected':''}>💜 不参加（共通経費のみ負担する）</option>
-                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 招待客（自分の食事代のみ・カンパで賄う）</option>
+                    <option value="join-only" ${m.type==='join-only'?'selected':''}>🍊 参加2（自分の食事代のみ）</option>
                 </select>
                 <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:8px; margin-top:10px;">
                     <div><span style="font-size:10px;">🎁 カンパ</span><input type="number" value="${m.gift}" oninput="members[${i}].gift=parseFloat(this.value)||0; saveData();"></div>
@@ -196,7 +196,7 @@
         document.getElementById('remainingDisplay').textContent = totalRemaining.toLocaleString();
     }
 
-    function getSuffix(gender) { return gender === 'male' ? '兄弟' : (gender === 'female' ? '姉妹' : '兄弟姉妹'); }
+    function getSuffix(gender) { return gender === 'male' ? '兄弟' : (gender === 'female' ? '姉妹' : '様'); }
     function sendLine(index) {
         const m = members[index];
         let msg = `親愛なる ${m.name}${getSuffix(m.gender)}\n先日の食事招待の精算のお知らせです。\n\n【個人合計】${m.finalPay.toLocaleString()}円\n`;
@@ -226,7 +226,7 @@
         };
         reader.readAsText(file);
     }
-    function guessGender(name) { const femaleEnds = ['子', '美', '香', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華', 'み', 'な', 'こ', 'よ']; return femaleEnds.includes(name.slice(-1)) ? 'female' : 'male'; }
+    function guessGender(name) { const femaleEnds = ['子', '美', '香', '菜', '代', '江', '恵', '奈', '緒', '織', '実', '希', '妃', '花', '華','佳' ,'エ','み', 'な', 'こ', 'よ']; return femaleEnds.includes(name.slice(-1)) ? 'female' : 'male'; }
     function addReceipt() { receipts.push({ label: '新規', price: 0, qty: 1, target: 'all' }); renderAll(); saveData(); }
     function addMember() { members.push({ name: '新規', type: 'both', gift: 0, gender: 'none', isPaid: false }); renderAll(); saveData(); }
 </script>
